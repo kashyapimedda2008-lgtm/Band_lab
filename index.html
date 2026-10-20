@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Band Lab: where does the Fermi level sit?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#EEF2F6;--panel:#FFFFFF;--ink:#14233A;--mute:#52637A;--grid:#D9E1EA;--line:#BFCBDA;--cb:#2F6FDE;--vb:#D9831A;--ef:#D6336C;--ei:#7A889C;--on:#FFFFFF;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0F1826;--panel:#17233A;--ink:#E6EDF6;--mute:#9AAABF;--grid:#22314A;--line:#2E3F5C;--cb:#6C9CFF;--vb:#F0B15A;--ef:#FF6B9A;--ei:#8794AB;--on:#0F1826;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0F1826;--panel:#17233A;--ink:#E6EDF6;--mute:#9AAABF;--grid:#22314A;--line:#2E3F5C;--cb:#6C9CFF;--vb:#F0B15A;--ef:#FF6B9A;--ei:#8794AB;--on:#0F1826;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.5 "Source Sans 3",system-ui,sans-serif;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:28px 28px}
+main{max-width:980px;margin:0 auto;padding:20px 16px 40px}
+h1{font:700 clamp(26px,5vw,42px)/1.1 "Bricolage Grotesque",system-ui,sans-serif;margin:8px 0 6px;letter-spacing:-.01em}
+.lede{color:var(--mute);margin:0 0 18px;max-width:60ch}
+.lab{display:grid;gap:14px;grid-template-columns:1fr}
+@media(min-width:800px){.lab{grid-template-columns:1.25fr 1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px}
+svg{width:100%;height:auto;display:block}
+.tx{fill:var(--ink);font:600 12px "Source Sans 3",sans-serif}
+.mu{fill:var(--mute);font:400 11px "Source Sans 3",sans-serif}
+h2{font:700 16px "Bricolage Grotesque",sans-serif;margin:0 0 10px}
+.row{margin-bottom:14px}
+.row label{display:flex;justify-content:space-between;font-weight:600;margin-bottom:4px}
+.row output{color:var(--mute);font-weight:400}
+input[type=range]{width:100%;accent-color:var(--cb);min-height:28px}
+.seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{flex:1;border:0;background:transparent;color:var(--ink);padding:8px 6px;font:600 14px "Source Sans 3",sans-serif;cursor:pointer;min-height:40px}
+.seg button[aria-pressed=true]{background:var(--cb);color:var(--on)}
+.pre{display:flex;flex-wrap:wrap;gap:8px}
+.pre button{border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:999px;padding:7px 12px;font:600 13px "Source Sans 3",sans-serif;cursor:pointer;min-height:36px}
+button:focus-visible,input:focus-visible{outline:2px solid var(--ef);outline-offset:2px}
+dl{display:grid;grid-template-columns:repeat(2,1fr);gap:10px 14px;margin:0}
+dt{color:var(--mute);font-size:13px}dd{margin:0;font:700 18px "Bricolage Grotesque",sans-serif}
+.status{margin:12px 0 0;padding-top:10px;border-top:1px solid var(--line)}
+.warn{color:var(--ef);font-weight:600}
+.note{color:var(--mute);font-size:13px;margin:16px 0 0;max-width:70ch}
+:root{--heat:.33}
+#bar{position:fixed;left:0;top:env(safe-area-inset-top,0px);height:4px;width:100%;transform-origin:0 50%;transform:scaleX(0);background:linear-gradient(90deg,var(--cb),var(--ef),var(--vb));z-index:50}
+.step{min-height:62vh;display:flex;align-items:center}
+.step .card{width:100%}
+.step p{margin:0}
+#steps.js .step{opacity:.3;transition:opacity .4s}
+#steps.js .step.act{opacity:1}
+@media(max-width:799px){.lab{display:block}.lab>.card:first-child{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;margin-bottom:14px}.lab>.card:first-child svg{max-height:36vh}.step{min-height:55vh}}
+@media(min-width:800px){.lab>.card:first-child{position:sticky;top:16px;align-self:start}}
+#mos .row{margin-top:12px}
+#mos .big{font:700 18px "Bricolage Grotesque",sans-serif}
+#mos .on{color:var(--ef);font-weight:700}
+@media(prefers-reduced-motion:no-preference){#mCh circle{animation:glow 1.4s ease-in-out infinite}}
+.lab>.card:first-child{box-shadow:0 0 calc(8px + 34px*var(--heat)) hsl(calc(215 - 190*var(--heat)) 90% 55% / .5);transition:box-shadow .3s}
+.chal{display:flex;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap}
+.chal button{border:0;background:var(--ef);color:var(--on);border-radius:8px;padding:8px 14px;font:700 14px "Source Sans 3",sans-serif;cursor:pointer;min-height:40px}
+#cht{font-size:14px}#cht.win{color:var(--ef);font-weight:700}
+@media(prefers-reduced-motion:no-preference){#lEF{filter:drop-shadow(0 0 5px var(--ef));animation:glow 2s ease-in-out infinite}@keyframes glow{50%{opacity:.5}}}
+</style>
+</head>
+<body>
+<main>
+<h1>Where does the Fermi level sit?</h1>
+<p class="lede">Scroll to follow the story, then take over the controls.</p>
+<div class="lab">
+ <section class="card" aria-label="Energy band diagram">
+  <svg viewBox="0 0 440 300" role="img" aria-label="Energy band diagram showing conduction band, valence band, intrinsic level and Fermi level">
+   <rect id="cb" x="60" y="14" width="300" height="40" fill="var(--cb)" opacity=".16"/>
+   <rect id="vb" x="60" y="250" width="300" height="42" fill="var(--vb)" opacity=".18"/>
+   <line id="lEc" x1="60" x2="360" stroke="var(--cb)" stroke-width="2.5"/>
+   <line id="lEv" x1="60" x2="360" stroke="var(--vb)" stroke-width="2.5"/>
+   <line id="lEi" x1="60" x2="360" stroke="var(--ei)" stroke-width="1.5" stroke-dasharray="5 4"/>
+   <line id="lEF" x1="60" x2="360" stroke="var(--ef)" stroke-width="3"/>
+   <text class="mu" x="66" y="28">Conduction band</text>
+   <text class="mu" x="66" y="285">Valence band</text>
+   <g id="dots"></g>
+   <line id="gapA" x1="34" x2="34" stroke="var(--mute)" stroke-width="1.5"/>
+   <line x1="29" x2="39" id="gapT" stroke="var(--mute)" stroke-width="1.5"/>
+   <line x1="29" x2="39" id="gapB" stroke="var(--mute)" stroke-width="1.5"/>
+   <text id="gapL" class="mu" text-anchor="middle"></text>
+   <text id="tEc" class="tx" x="368" fill="var(--cb)"></text>
+   <text id="tEv" class="tx" x="368"></text>
+   <text id="tEi" class="mu" x="368"></text>
+   <text id="tEF" class="tx" x="368" style="fill:var(--ef)"></text>
+  </svg>
+ </section>
+ <div>
+  <div id="steps">
+   <article class="step"><div class="card"><h2>Pure silicon</h2><p>With no dopants, electrons and holes are equal in number, so the Fermi level sits near the middle of the gap.</p></div></article>
+   <article class="step"><div class="card"><h2>Add donors</h2><p>Each phosphorus atom donates an electron. As the doping rises, the Fermi level climbs toward the conduction band.</p></div></article>
+   <article class="step"><div class="card"><h2>Swap to acceptors</h2><p>Boron grabs electrons and leaves holes behind. Now the Fermi level drops below the middle of the gap.</p></div></article>
+   <article class="step"><div class="card"><h2>Turn up the heat</h2><p>Heat creates electron–hole pairs from the crystal itself. At high temperature they swamp the dopants, and the Fermi level drifts back to the middle.</p></div></article>
+   <article class="step"><div class="card"><h2>Your turn</h2><p>Play with the controls and take the challenge. Then keep scrolling to switch a transistor on with the gate.</p></div></article>
+  </div>
+  <section class="card" aria-label="Controls">
+   <h2>Controls</h2>
+   <div class="row"><div class="seg" id="mat" role="group" aria-label="Material">
+    <button data-m="Si" aria-pressed="true">Silicon</button><button data-m="Ge" aria-pressed="false">Germanium</button><button data-m="GaAs" aria-pressed="false">GaAs</button></div></div>
+   <div class="row"><div class="seg" id="typ" role="group" aria-label="Dopant type">
+    <button data-t="n" aria-pressed="true">n-type (donors)</button><button data-t="p" aria-pressed="false">p-type (acceptors)</button></div></div>
+   <div class="row"><label for="lg">Doping level <output id="oLg"></output></label><input id="lg" type="range" min="12" max="20" step="0.1" value="16"></div>
+   <div class="row"><label for="T">Temperature <output id="oT"></output></label><input id="T" type="range" min="100" max="700" step="5" value="300"></div>
+   <div class="pre" aria-label="Presets">
+    <button data-p="sub">p-substrate</button><button data-p="sd">n+ source/drain</button><button data-p="hot">Hot and lightly doped</button></div>
+  </section>
+  <section class="card" style="margin-top:14px" aria-live="polite">
+   <h2>Readout</h2>
+   <dl>
+    <div><dt>Electrons, n</dt><dd id="rN"></dd></div><div><dt>Holes, p</dt><dd id="rP"></dd></div>
+    <div><dt>Intrinsic, nᵢ</dt><dd id="rNi"></dd></div><div><dt>Band gap, E<sub>g</sub></dt><dd id="rEg"></dd></div>
+    <div><dt>E<sub>F</sub> − E<sub>i</sub></dt><dd id="rEF"></dd></div><div><dt>E<sub>c</sub> − E<sub>F</sub></dt><dd id="rEc"></dd></div>
+   </dl>
+   <p class="status" id="st"></p>
+   <div class="chal"><button id="chb">New challenge</button><span id="cht" aria-live="polite"></span></div>
+  </section>
+ </div>
+</div>
+<section class="card" id="mos" style="margin-top:14px" aria-label="MOS capacitor">
+ <h2>MOS capacitor: what turns a transistor on?</h2>
+ <svg viewBox="0 0 440 260" role="img" aria-label="Band bending under a gate as the gate voltage changes">
+  <polygon id="mCb" fill="var(--cb)" opacity=".14"/>
+  <polygon id="mVb" fill="var(--vb)" opacity=".16"/>
+  <polyline id="mEc" fill="none" stroke="var(--cb)" stroke-width="2.5"/>
+  <polyline id="mEv" fill="none" stroke="var(--vb)" stroke-width="2.5"/>
+  <polyline id="mEi" fill="none" stroke="var(--ei)" stroke-width="1.5" stroke-dasharray="5 4"/>
+  <line id="mEF" x1="46" x2="416" stroke="var(--ef)" stroke-width="3"/>
+  <rect id="mG" x="12" y="6" width="20" height="248" fill="var(--ef)"/>
+  <rect x="32" y="6" width="14" height="248" fill="var(--mute)" opacity=".25"/>
+  <text class="mu" transform="translate(26 130) rotate(-90)" text-anchor="middle" style="fill:var(--on)">Gate</text>
+  <g id="mCh"></g>
+ </svg>
+ <p class="mu" style="margin:4px 0 0;color:var(--mute);font-size:13px">Blue is Ec, orange is Ev, dashed grey is Ei, pink is EF (flat in equilibrium). Depth into the silicon runs left to right from the oxide. It uses the material, type, doping and temperature chosen above.</p>
+ <div class="row"><label for="vg">Gate voltage <output id="oV"></output></label><input id="vg" type="range" min="-3" max="3" step="0.05" value="0"></div>
+ <dl>
+  <div><dt>Regime</dt><dd id="mReg"></dd></div><div><dt>Surface band bending</dt><dd id="mPs"></dd></div>
+  <div><dt>Threshold voltage, V<sub>T</sub></dt><dd id="mVt"></dd></div><div><dt>Depletion width</dt><dd id="mW"></dd></div>
+ </dl>
+ <p class="status" id="mSt"></p>
+ <p class="note" style="margin-top:10px">Ideal MOS model: 3 nm oxide, no oxide charge, depletion approximation, and inversion pinned near 2φ<sub>F</sub>.</p>
+</section>
+<p class="note">Model: non-degenerate statistics, all dopants ionized (no freeze-out at low temperature). Band gap follows the Varshni equation, and nᵢ comes from the effective densities of states at the chosen temperature. Concentrations are in cm⁻³.</p>
+</main>
+<div id="bar" aria-hidden="true"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script>
+(function(){
+var K=8.617e-5;
+var M={Si:{Eg0:1.170,a:4.73e-4,b:636,Nc:2.8e19,Nv:1.04e19},Ge:{Eg0:0.7437,a:4.774e-4,b:235,Nc:1.04e19,Nv:6e18},GaAs:{Eg0:1.519,a:5.405e-4,b:204,Nc:4.7e17,Nv:7e18}};
+var S={m:"Si",t:"n",lg:16,T:300};
+var $=function(i){return document.getElementById(i)};
+var NS="http://www.w3.org/2000/svg";
+var Y0=250,SC=130,PT=[],DC=[];
+function y(E){return Y0-E*SC}
+function sci(x){if(!isFinite(x)||x<=0)return "0";var e=Math.floor(Math.log10(x)),m=x/Math.pow(10,e);if(m>=9.95){m=1;e++}return m.toFixed(1)+"×10<sup>"+e+"</sup>"}
+// fixed pseudo-random dot positions
+var seed=7;function rnd(){seed=(seed*16807)%2147483647;return seed/2147483647}
+var P=[];for(var i=0;i<40;i++)P.push([rnd(),rnd()]);
+function calc(){
+ var m=M[S.m],T=S.T,s=Math.pow(T/300,1.5);
+ var Eg=m.Eg0-m.a*T*T/(T+m.b),Nc=m.Nc*s,Nv=m.Nv*s;
+ var ni=Math.sqrt(Nc*Nv)*Math.exp(-Eg/(2*K*T));
+ var N=Math.pow(10,S.lg),n,p;
+ if(S.t==="n"){n=N/2+Math.sqrt(N*N/4+ni*ni);p=ni*ni/n}else{p=N/2+Math.sqrt(N*N/4+ni*ni);n=ni*ni/p}
+ var Ei=Eg/2+K*T/2*Math.log(Nv/Nc);
+ var EF=Ei+K*T*Math.log(n/ni);
+ return{Eg:Eg,Nc:Nc,Nv:Nv,ni:ni,n:n,p:p,Ei:Ei,EF:EF};
+}
+function setY(id,v){var e=$(id);e.setAttribute("y1",v);e.setAttribute("y2",v)}
+function draw(){
+ var c=calc(),yc=y(c.Eg),yi=y(c.Ei);
+ var efc=Math.max(-0.14,Math.min(c.Eg+0.14,c.EF)),yf=y(efc);
+ $("cb").setAttribute("height",Math.max(0,yc-14));$("cb").setAttribute("y",14);
+ setY("lEc",yc);setY("lEv",Y0);setY("lEi",yi);setY("lEF",yf);
+ var g=$("gapA");g.setAttribute("y1",yc);g.setAttribute("y2",Y0);
+ setY("gapT",yc);setY("gapB",Y0);
+ var gl=$("gapL");gl.setAttribute("x",16);gl.setAttribute("y",(yc+Y0)/2);gl.setAttribute("transform","rotate(-90 16 "+(yc+Y0)/2+")");gl.textContent="Eg = "+c.Eg.toFixed(2)+" eV";
+ var te=$("tEc");te.setAttribute("y",yc+4);te.textContent="Ec";
+ var tv=$("tEv");tv.setAttribute("y",Y0+4);tv.textContent="Ev";
+ var ti=$("tEi");ti.setAttribute("y",yi+13);ti.textContent="Ei";
+ var tf=$("tEF");tf.setAttribute("y",yf-5);tf.textContent="EF";
+ // carriers as dots
+ var kn=Math.max(0,Math.min(40,Math.round((Math.log10(c.n)-8)*3.3)));
+ var kp=Math.max(0,Math.min(40,Math.round((Math.log10(c.p)-8)*3.3)));
+ var h="";PT=[];
+ for(var i=0;i<kn;i++){PT.push({x:70+P[i][0]*280,y:22+P[i][1]*Math.max(0,yc-32),a:22,b:Math.max(24,yc-10)});h+='<circle r="3.4" fill="var(--cb)"/>'}
+ for(i=0;i<kp;i++){PT.push({x:70+P[i][1]*280,y:Y0+10+P[i][0]*24,a:Y0+8,b:Y0+36});h+='<circle r="3.4" fill="none" stroke="var(--vb)" stroke-width="1.8"/>'}
+ $("dots").innerHTML=h;DC=$("dots").children;step(0);
+ // readout
+ $("rN").innerHTML=sci(c.n);$("rP").innerHTML=sci(c.p);$("rNi").innerHTML=sci(c.ni);$("rEg").textContent=c.Eg.toFixed(2)+" eV";
+ var d=c.EF-c.Ei;$("rEF").textContent=(d>=0?"+":"−")+Math.abs(d).toFixed(2)+" eV";
+ $("rEc").textContent=(c.Eg-c.EF).toFixed(2)+" eV";
+ $("oLg").innerHTML="10<sup>"+S.lg.toFixed(1)+"</sup> cm⁻³";$("oT").textContent=S.T+" K";document.documentElement.style.setProperty("--heat",((S.T-100)/600).toFixed(2));
+ var r=c.n/c.p,txt;
+ if(r<3&&r>1/3)txt="Nearly intrinsic: thermal carriers outnumber the dopants, so E<sub>F</sub> sits close to E<sub>i</sub>.";
+ else if(c.n>c.p)txt="n-type: electrons dominate, so E<sub>F</sub> sits above E<sub>i</sub>, "+(c.Eg-c.EF).toFixed(2)+" eV below E<sub>c</sub>.";
+ else txt="p-type: holes dominate, so E<sub>F</sub> sits below E<sub>i</sub>, "+c.EF.toFixed(2)+" eV above E<sub>v</sub>.";
+ if(c.EF>c.Eg||c.EF<0)txt+=' <span class="warn">E<sub>F</sub> has reached a band edge (degenerate doping), so this model is only approximate.</span>';
+ $("st").innerHTML=txt;chk(c);mos(c);
+}
+function pressed(id,attr,val){var b=$(id).querySelectorAll("button");for(var i=0;i<b.length;i++)b[i].setAttribute("aria-pressed",b[i].getAttribute(attr)===val)}
+$("mat").addEventListener("click",function(e){var m=e.target.getAttribute&&e.target.getAttribute("data-m");if(m){S.m=m;pressed("mat","data-m",m);draw()}});
+$("typ").addEventListener("click",function(e){var t=e.target.getAttribute&&e.target.getAttribute("data-t");if(t){S.t=t;pressed("typ","data-t",t);draw()}});
+$("lg").addEventListener("input",function(){S.lg=parseFloat(this.value);draw()});
+$("T").addEventListener("input",function(){S.T=parseFloat(this.value);draw()});
+function apply(m,t,lg,T){S.m=m;S.t=t;S.lg=lg;S.T=T;$("lg").value=lg;$("T").value=T;pressed("mat","data-m",m);pressed("typ","data-t",t);draw()}
+document.querySelector(".pre").addEventListener("click",function(e){var p=e.target.getAttribute&&e.target.getAttribute("data-p");
+ if(p==="sub")apply("Si","p",15,300);if(p==="sd")apply("Si","n",20,300);if(p==="hot")apply("Si","n",13,650)});
+var C=null,RM=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
+function step(v){for(var i=0;i<PT.length&&i<DC.length;i++){var q=PT[i];q.x+=(Math.random()-.5)*v*3;q.y+=(Math.random()-.5)*v*3;
+ if(q.x<66)q.x=66;if(q.x>354)q.x=354;if(q.y<q.a)q.y=q.a;if(q.y>q.b)q.y=q.b;
+ DC[i].setAttribute("cx",q.x.toFixed(1));DC[i].setAttribute("cy",q.y.toFixed(1))}}
+function tick(){step(Math.sqrt(S.T/300)*1.2);requestAnimationFrame(tick)}
+function chk(c){var el=$("cht");
+ if(!C){el.className="";el.textContent="Game: hit a target Fermi level.";return}
+ var n=C.t==="n",cur=n?c.Eg-c.EF:c.EF,ok=S.t===C.t&&Math.abs(cur-C.d)<0.03;
+ el.className=ok?"win":"";
+ el.innerHTML=(n?"Make it n-type with E<sub>F</sub> ":"Make it p-type with E<sub>F</sub> ")+C.d.toFixed(2)+(n?" eV below E<sub>c</sub>.":" eV above E<sub>v</sub>.")+(ok?" Nailed it! ✓":" Now at "+cur.toFixed(2)+" eV.")}
+$("chb").addEventListener("click",function(){C={t:Math.random()<.5?"n":"p",d:Math.round((0.1+Math.random()*0.3)*100)/100};draw()});
+var V=0,EPS={Si:11.7,Ge:16,GaAs:12.9};
+function dot(t,x,y){return t==="e"?'<circle cx="'+x.toFixed(0)+'" cy="'+y.toFixed(0)+'" r="3.4" fill="var(--cb)"/>':'<circle cx="'+x.toFixed(0)+'" cy="'+y.toFixed(0)+'" r="3.2" fill="none" stroke="var(--vb)" stroke-width="1.8"/>'}
+function mos(c){
+ var s=S.t==="p"?1:-1,N=Math.pow(10,S.lg),eps=EPS[S.m]*8.854e-14,Q=1.602e-19,Cox=3.9*8.854e-14/3e-7;
+ var phiF=Math.min(K*S.T*Math.log(N/c.ni),c.Eg/2-0.03);if(!(phiF>0.02))phiF=0.02;
+ var gam=Math.sqrt(2*Q*eps*N)/Cox,Wm=Math.sqrt(4*eps*phiF/(Q*N)),Vt=2*phiF+gam*Math.sqrt(2*phiF);
+ var Ve=s*V,ps,W,reg,ld=0.05*Wm;
+ if(Ve<=0){ps=Math.max(-0.35,Ve*0.07);W=ld;reg="Accumulation"}
+ else if(Ve<Vt){var r=(-gam+Math.sqrt(gam*gam+4*Ve))/2;ps=r*r;W=Math.sqrt(2*eps*ps/(Q*N));reg="Depletion"}
+ else{ps=2*phiF+0.04*Math.log(1+(Ve-Vt));W=Wm;reg="Inversion"}
+ var D=1.5*Wm,SC=64,yE=130,x0=46,xw=370,EcB=c.Eg/2+s*phiF,EvB=-(c.Eg/2-s*phiF),a="",b="",m="";
+ for(var i=0;i<=40;i++){var d=D*i/40,pp=Ve<=0?ps*Math.exp(-d/ld):(d<W?ps*Math.pow(1-d/W,2):0),x=(x0+xw*i/40).toFixed(1),sh=-s*pp;
+  a+=x+","+(yE-(EcB+sh)*SC).toFixed(1)+" ";b+=x+","+(yE-(EvB+sh)*SC).toFixed(1)+" ";m+=x+","+(yE-((EcB+EvB)/2+sh)*SC).toFixed(1)+" "}
+ $("mEc").setAttribute("points",a);$("mEv").setAttribute("points",b);$("mEi").setAttribute("points",m);
+ $("mCb").setAttribute("points",a+"416,6 46,6");$("mVb").setAttribute("points",b+"416,254 46,254");
+ $("mEF").setAttribute("y1",yE);$("mEF").setAttribute("y2",yE);
+ $("mG").setAttribute("opacity",(0.12+0.88*Math.abs(V)/3).toFixed(2));
+ var h="",yc0=yE-(EcB-s*ps*(Ve<=0?1:1))*SC,yv0=yE-(EvB-s*ps)*SC;
+ if(reg!=="Accumulation"){var n=Math.min(10,Math.max(2,Math.round(8*W/D)));for(i=0;i<n;i++)h+='<text class="mu" text-anchor="middle" x="'+(x0+xw*(W/D)*(i+.5)/n).toFixed(0)+'" y="250">'+(s===1?"−":"+")+'</text>'}
+ if(reg==="Accumulation"){for(i=0;i<6;i++)h+=s===1?dot("h",x0+8+i*7,yv0-6-(i%2)*5):dot("e",x0+8+i*7,yc0+6+(i%2)*5)}
+ if(reg==="Inversion"){for(i=0;i<8;i++)h+=s===1?dot("e",x0+8+i*7,yc0+6+(i%2)*5):dot("h",x0+8+i*7,yv0-6-(i%2)*5)}
+ $("mCh").innerHTML=h;
+ $("oV").textContent=V.toFixed(2)+" V";
+ $("mReg").textContent=reg;$("mPs").textContent=(s*ps>=0?"":"−")+Math.abs(ps).toFixed(2)+" eV";
+ $("mVt").textContent=(s*Vt).toFixed(2)+" V";
+ $("mW").textContent=W<1e-4?(W*1e7).toFixed(0)+" nm":(W*1e4).toFixed(2)+" µm";
+ var ch=s===1?"n":"p";
+ $("mSt").innerHTML=reg==="Inversion"?'<span class="on">Transistor ON.</span> A '+ch+'-channel of minority carriers has formed at the surface because V<sub>g</sub> passed V<sub>T</sub>.':(reg==="Depletion"?"Transistor OFF. Majority carriers are pushed away, leaving fixed charge, but there is no channel yet. Raise |V<sub>g</sub>| to V<sub>T</sub>.":"Transistor OFF. Majority carriers pile up at the surface.")
+}
+$("vg").addEventListener("input",function(){V=parseFloat(this.value);mos(calc())});
+(function(){
+ if(!window.gsap||!window.ScrollTrigger||RM)return;
+ gsap.registerPlugin(ScrollTrigger);
+ var Pr={lg:S.lg,T:S.T},st=$("steps"),steps=st.children;
+ st.classList.add("js");
+ function rend(){S.lg=Pr.lg;S.T=Pr.T;$("lg").value=S.lg;$("T").value=S.T;draw()}
+ var pre=[{t:"n",lg:12,T:300},{t:"n",lg:18,T:300},{t:"p",lg:17,T:300},{t:"p",lg:14,T:650},{t:"p",lg:16,T:300}];
+ function go(i){for(var j=0;j<steps.length;j++)steps[j].classList.toggle("act",j===i);
+  var p=pre[i];S.m="Si";S.t=p.t;pressed("mat","data-m","Si");pressed("typ","data-t",p.t);
+  gsap.to(Pr,{lg:p.lg,T:p.T,duration:1.4,ease:"power2.inOut",overwrite:true,onUpdate:rend})}
+ for(var i=0;i<steps.length;i++)(function(i){ScrollTrigger.create({trigger:steps[i],start:"top 55%",end:"bottom 55%",onToggle:function(s){if(s.isActive)go(i)}})})(i);
+ go(0);
+ var Vp={v:-2};
+ ScrollTrigger.create({trigger:"#mos",start:"top 75%",end:"bottom 45%",scrub:.6,animation:gsap.fromTo(Vp,{v:-2},{v:3,ease:"none",onUpdate:function(){V=Vp.v;$("vg").value=V;mos(calc())}})});
+ gsap.to("#bar",{scaleX:1,ease:"none",scrollTrigger:{start:0,end:"max",scrub:true}});
+ gsap.from("h1,.lede",{y:26,opacity:0,duration:.9,stagger:.14,ease:"power3.out"});
+})();
+if(!RM)requestAnimationFrame(tick);
+draw();
+})();
+</script>
+</body>
+</html>
